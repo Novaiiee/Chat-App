@@ -1,15 +1,15 @@
 import { User } from "./../../user/user.model";
 
 export interface RegisterDTO {
-  name: string;
+  realName: string;
   password: string;
   email: string;
-  username: string;
+  displayName: string;
 }
 
 export interface LoginDTO extends Pick<RegisterDTO, "email" | "password"> {}
 
-export interface LoginResultDTO {
+export interface AuthResult {
   token: string;
   user: User;
 }

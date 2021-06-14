@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { IsEmail, MinLength } from "class-validator";
+import { Document } from "mongoose";
 
 @Schema({ collection: "chat-app-users" })
 export class User {
@@ -19,10 +20,11 @@ export class User {
   email: string;
 
   @Prop()
-  userID: string;
+  id: string;
 
   @Prop([String])
-  chatRooms: string[]
+  chatRooms: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+export type UserDocument = User & Document;
