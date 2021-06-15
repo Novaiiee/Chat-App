@@ -19,6 +19,9 @@ import { JWT_SECRET } from '../../common/constants';
       imports: [ConfigModule],
       useFactory: async () => ({
         secret: JWT_SECRET,
+        signOptions: {
+          expiresIn: "7d"
+        }
       }),
       inject: [ConfigService],
     }),

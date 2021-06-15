@@ -12,10 +12,11 @@ export class AuthService {
   ) {}
 
   async register(body: RegisterDTO): Promise<AuthResult> {
+    const doesUserExist = await this.userService.findByEmail(body.email);
+    if (doesUserExist) throw new HttpException("user already exists", HttpStatus.BAD_REQUEST);
+
     const user = await this.userService.create(body);
     const token = this.generateToken(user.id);
-
-    delete user.password;
     
     return {
       user,
@@ -32,7 +33,7 @@ export class AuthService {
 
   async validateUser(body: LoginDTO) {
     const user = await this.userService.findByEmail(body.email);
-    if (!user) throw new HttpException("user not found", HttpStatus.NOT_FOUND);
+    if (!user) throw new HttpException("user not found", HttpStatus.UNAUTHORIZED);
 
     const isPasswordValid = await compare(body.password, user.password);
     if (!isPasswordValid)
@@ -40,6 +41,13 @@ export class AuthService {
         "password is invalid",
         HttpStatus.INTERNAL_SERVER_ERROR
       );
+
+    return user;
+  }
+
+  async validateToken(payload: { userID: string; }) {
+    const user = await this.userService.findByID(payload.userID);
+    if (!user) throw new HttpException("user not found", HttpStatus.UNAUTHORIZED);
 
     return user;
   }
