@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { v4 } from "uuid";
@@ -9,7 +9,7 @@ import { Chat, ChatDocument } from "./chat.model";
 export class ChatService {
   constructor(@InjectModel(Chat.name) private readonly chatModel: Model<ChatDocument>) { }
 
-  async create(nameParam: string, user?: UserDocument) {
+  async create(nameParam: string, user: UserDocument) {
     const name = nameParam.split("+").join(" ");
 
     const doesRoomExist = await this.chatModel.findOne({ ownerID: user.id, name });
@@ -23,5 +23,22 @@ export class ChatService {
     })
 
     return chatRoom;
+  }
+
+  async myChats(user: UserDocument) {
+    return this.chatModel.find({ "userIDs": user.id });
+  }
+
+  async addUser(user: UserDocument, otherUserID: string, chatID: String) {
+    let chat = await this.chatModel.findOne({ id: chatID });
+
+    if (!chat) throw new HttpException("room does not exist", HttpStatus.BAD_REQUEST);
+    if (chat.ownerID !== user.id) throw new HttpException("not owner", HttpStatus.UNAUTHORIZED);
+    if (chat.userIDs.includes(otherUserID)) throw new HttpException("user already added", HttpStatus.BAD_REQUEST);
+
+    chat.userIDs = [...chat.userIDs, otherUserID];
+    chat = await chat.save();
+
+    return chat;
   }
 }
