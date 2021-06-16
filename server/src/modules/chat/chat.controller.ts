@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -22,6 +23,12 @@ export class ChatController {
     return chat;
   }
 
+  @Delete("delete/:id")
+  @UseGuards(JwtGuard)
+  async delete(@Param("id") id: string, @Req() req) {
+    return this.chatService.delete(id, req.user);
+  }
+
   @UseGuards(JwtGuard)
   @Put("/add")
   async addUser(
@@ -30,6 +37,16 @@ export class ChatController {
     @Query("userID") userID: string
   ) {
     return this.chatService.addUser(req.user, userID, chatID);
+  }
+
+  @UseGuards(JwtGuard)
+  @Delete("/remove")
+  async removeUser(
+    @Req() req,
+    @Query("chatID") chatID: string,
+    @Query("userID") userID: string
+  ) {
+    return this.chatService.removeUser(req.user, userID, chatID);
   }
 
   @Get("/my")
