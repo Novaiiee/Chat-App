@@ -13,11 +13,11 @@ export class ChatService {
 
   async create(nameParam: string, user: UserDocument) {
     const name = nameParam.split("+").join(" ");
-
     const doesRoomExist = await this.chatModel.findOne({
       ownerID: user.id,
       name,
     });
+    
     if (doesRoomExist)
       throw new HttpException("room already exists", HttpStatus.BAD_REQUEST);
 
