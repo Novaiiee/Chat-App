@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
 import { JwtGuard } from "../common/jwt.guard";
-import { AuthService } from "./auth.service";
 import { LoginDTO, RegisterDTO } from "./auth.dto";
+import { AuthService } from "./auth.service";
 
 @Controller("auth")
 export class AuthController {
@@ -15,6 +15,17 @@ export class AuthController {
   @Post("/login")
   async login(@Body() body: LoginDTO) {
     return this.authService.login(body);
+  }
+
+  @Post("/login-jwt")
+  @UseGuards(JwtGuard)
+  async loginJwt(@Req() req) {
+    const token = this.authService.generateToken(req.user.id);
+    
+    return {
+      user: req.user,
+      token
+    }
   }
 
   @Get("/protected")
