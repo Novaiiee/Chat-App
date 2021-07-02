@@ -3,6 +3,7 @@ import { useFetch } from "../hooks/useFetch";
 
 export interface AuthContextState {
 	user: User | null;
+	login: (v: FormValues) => Promise<void>
 }
 
 interface LoginResult {
@@ -14,30 +15,42 @@ export const AuthContext = createContext({} as AuthContextState);
 
 export const AuthProvider: FC = ({ children }) => {
 	const [user, setUser] = useState<User | null>(null);
-	const [loginResult, loginError, loginUser] = useFetch<LoginResult>({
+	const [, autoLoginError, autoLoginUser] = useFetch<LoginResult>({
+		start: false,
+		url: "/auth/login-jwt",
+		method: "POST",
+	});
+
+	const [, loginError, loginUser] = useFetch<LoginResult>({
 		start: false,
 		url: "/auth/login",
 		method: "POST",
 	});
 
-	// const login = async () => {};
+	const login = async (values: FormValues) => {
+		const result = await loginUser({ data: values });
+		
+		if (loginError) {
+			console.error(loginError);
+			return;
+		}
+	};
 
 	const loginJwt = useCallback(
 		async (token: string) => {
-			await loginUser({
+			const result = await autoLoginUser({
 				headers: { Authorization: `Bearer ${token}` },
-				data: { email: "toheebeji@gmail.com", password: "twilight123" },
 			});
 
-			if (loginError) {
-				console.log(loginError);
+			if (autoLoginError) {
+				console.error(autoLoginError);
 				return;
 			}
 
-			localStorage.setItem("ACCESS_TOKEN", loginResult.token);
-			setUser(loginResult.user);
+			localStorage.setItem("ACCESS_TOKEN", result.token);
+			setUser(result.user);
 		},
-		[loginError, loginUser, loginResult]
+		[autoLoginError, autoLoginUser]
 	);
 
 	useEffect(() => {
@@ -45,5 +58,5 @@ export const AuthProvider: FC = ({ children }) => {
 		if (token) loginJwt(token);
 	}, [loginJwt]);
 
-	return <AuthContext.Provider value={{ user }}>{children}</AuthContext.Provider>;
+	return <AuthContext.Provider value={{ user, login }}>{children}</AuthContext.Provider>;
 };

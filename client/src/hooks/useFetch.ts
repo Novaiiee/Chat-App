@@ -7,7 +7,7 @@ interface Options {
 	url: string;
 }
 
-type ReturnType<T> = [T, string, (options: AxiosRequestConfig) => Promise<void>];
+type ReturnType<T> = [T, string, (options: AxiosRequestConfig) => Promise<T>];
 
 const endpoint = "http://localhost:8000";
 
@@ -15,15 +15,22 @@ export function useFetch<T extends object>({ start = true, method, url }: Option
 	const [value, setValue] = useState<T>();
 	const [error, setError] = useState("");
 
-	const fetch = useCallback(async (options: AxiosRequestConfig) => {
-		axios({ ...options, url: `${endpoint}${url}`, method })
-			.then((res) => setValue(res.data))
-			.catch((err: Error | AxiosError) => {
-				if (axios.isAxiosError(err))  setError(err.response?.data.message);
-				else setError(err.message);
-				
+	const fetch = useCallback(
+		async (options: AxiosRequestConfig): Promise<T> => {
+			return new Promise((resolve, reject) => {
+				axios({ ...options, url: `${endpoint}${url}`, method })
+					.then((res) => {
+						setValue(res.data);
+						resolve(res.data);
+					})
+					.catch((err: Error | AxiosError) => {
+						if (axios.isAxiosError(err)) setError(err.response?.data.message);
+						else setError(err.message);
+					});
 			});
-	}, [url, method]);
+		},
+		[url, method]
+	);
 
 	useEffect(() => {
 		if (!start) return;
